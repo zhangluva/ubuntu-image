@@ -39,11 +39,15 @@ jobs:
           # Replace characters not allowed in Docker tags with underscores
           sanitized_name=$(echo "${{ github.ref_name }}" | sed 's/[^A-Za-z0-9_.-]/_/g')
           echo "branch_name=$sanitized_name" >> "$GITHUB_OUTPUT"
+      - name: Generate image tag
+        id: generate_image_tag
+        run: |
+          echo "image_tag=$(echo ${{ github.sha }} | cut -c 1-8)-$(date +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
       - uses: ./.github/actions/build-and-push-image
         with:
           root-dir: "."
           push: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push == 'true') }}
           image-name: ubuntu
-          image-tag: ${{ steps.sanitize_branch_name.outputs.branch_name }}-${{ github.sha }}-$(date +%Y%m%d%H%M%S)
+          image-tag: ${{ steps.sanitize_branch_name.outputs.branch_name }}-${{ steps.generate_image_tag.outputs.image_tag }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
