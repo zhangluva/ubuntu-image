@@ -1,0 +1,54 @@
+name: Build and Push Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'GitHub REF (branch or SHA) to be used for checkout'
+        required: true
+      app:
+        description: 'Application folder name(s) under /go used to build images. All apps will get built if not specified'
+        required: false
+      push:
+        description: 'Whether to push the results to the container registry and flux artifact registry'
+        required: true
+        default: 'false'
+
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  test-lint-and-push:
+    name: Test, build, and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.ref }}
+      - name: Install postgres UT deps
+        run: sudo apt-get install postgresql-14 postgresql-14-wal2json
+      - uses: ./.github/actions/golang-validate
+        with:
+          root-dir: "."
+      - name: Extract folder name
+        id: extract_folder_name
+        run: |
+          echo "folder_name=$(basename .)" >> "$GITHUB_OUTPUT"
+      - name: Sanitize branch name
+        id: sanitize_branch_name
+        run: |
+          # Replace characters not allowed in Docker tags with underscores
+          sanitized_name=$(echo "${{ github.ref_name }}" | sed 's/[^A-Za-z0-9_.-]/_/g')
+          echo "branch_name=$sanitized_name" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/golang-build-and-push
+        with:
+          root-dir: "."
+          push: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push == 'true') }}
+          image-name: ubuntu
+          image-tag: ${{ steps.sanitize_branch_name.outputs.branch_name }}-${{ github.sha }}-$(date +%Y%m%d%H%M%S)
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
