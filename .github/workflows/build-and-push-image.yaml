@@ -29,8 +29,6 @@ jobs:
         with:
           fetch-depth: 1
           ref: ${{ inputs.ref }}
-      - name: Install postgres UT deps
-        run: sudo apt-get install postgresql-14 postgresql-14-wal2json
       - name: Extract folder name
         id: extract_folder_name
         run: |
