@@ -44,7 +44,7 @@ jobs:
           # Replace characters not allowed in Docker tags with underscores
           sanitized_name=$(echo "${{ github.ref_name }}" | sed 's/[^A-Za-z0-9_.-]/_/g')
           echo "branch_name=$sanitized_name" >> "$GITHUB_OUTPUT"
-      - uses: ./.github/actions/golang-build-and-push
+      - uses: ./.github/actions/build-and-push-image
         with:
           root-dir: "."
           push: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push == 'true') }}
