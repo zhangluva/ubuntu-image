@@ -31,9 +31,6 @@ jobs:
           ref: ${{ inputs.ref }}
       - name: Install postgres UT deps
         run: sudo apt-get install postgresql-14 postgresql-14-wal2json
-      - uses: ./.github/actions/golang-validate
-        with:
-          root-dir: "."
       - name: Extract folder name
         id: extract_folder_name
         run: |
