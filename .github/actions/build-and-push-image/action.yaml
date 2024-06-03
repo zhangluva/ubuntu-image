@@ -33,14 +33,14 @@ runs:
         username: ${{ inputs.dockerhub-username }}
         password: ${{ inputs.dockerhub-password }}
     - name: Build and push
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v5
       with:
         file: ${{ inputs.root-dir }}/Dockerfile
         push: ${{ inputs.push }}
-        directory: ${{ inputs.root-dir }}
-        registry: registry.infra.basetensors.com
+        context: ${{ inputs.root-dir }}
+        platforms: linux/amd64,linux/arm64
         tags: |
-          test/${{ inputs.image-name }}:${{ inputs.image-tag }}
+          registry.infra.basetensors.com/test/${{ inputs.image-name }}:${{ inputs.image-tag }}
         cache-from: type=gha,mode=max,ref=master
         cache-to: type=gha,mode=max,ref=master
       env:
